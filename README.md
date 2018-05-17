@@ -3,36 +3,36 @@ A wrapper for mongoose, emulating the eloquent query Builder for PHP
 
 TODO
 
-- [] get(augumented find)
+- [ ] get(augumented find)
 
-- [] FindOneOrMany
+- [ ] FindOneOrMany
 
-- [] FindOrFail
+- [ ] FindOrFail
 
-- [] FindOneOrFail
+- [ ] FindOneOrFail
 
-- [] FindManyOrFail
+- [ ] FindManyOrFail
 
-- [] FindThenEdit
+- [ ] FindThenEdit
 
-- [] FindThenDelete
+- [ ] FindThenDelete
 
-- [] edit
+- [ ] edit
 
-- [] editThenFind (using get)
+- [ ] editThenFind (using get)
 
-- [] editOrFail
+- [ ] editOrFail
 
-- [] editMany
+- [ ] editMany
 
-- [] editManyOrFail
+- [ ] editManyOrFail
 
-- [] toggle
+- [ ] toggle
 
-- [] delete
+- [ ] delete
 
-- [] deleteOrFail
+- [ ] deleteOrFail
 
-- [] deleteOneOrFail
+- [ ] deleteOneOrFail
 
-- [] deleteManyOrFail
+- [ ] deleteManyOrFail
