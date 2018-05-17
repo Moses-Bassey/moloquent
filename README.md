@@ -5,27 +5,31 @@ TODO
 
 - [ ] get(augumented find)
 
-- [ ] FindOneOrMany
+- [ ] getOne,
 
-- [ ] FindOrFail
+- [ ] getOneOrMany
 
-- [ ] FindOneOrFail
+- [ ] getOrFail
 
-- [ ] FindManyOrFail
+- [ ] getOneOrFail
 
-- [ ] FindThenEdit
+- [ ] getManyOrFail
 
-- [ ] FindThenDelete
+- [ ] getThenEdit
+
+- [ ] getThenDelete
 
 - [ ] edit
 
-- [ ] editThenFind (using get)
+- [ ] editThenGet
 
 - [ ] editOrFail
 
 - [ ] editMany
 
 - [ ] editManyOrFail
+
+- [ ] editOrCreate
 
 - [ ] toggle
 
