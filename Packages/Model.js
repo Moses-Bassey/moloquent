@@ -1,15 +1,28 @@
 
 
-module.exports = class Wrapper{
+module.exports = class Model{
 
+    /**
+     * @param {Object} query
+     * @param {Object} projection
+     */
     static get(query, projection = {}){
         return this.find(query, projection)
     }
 
+    /**
+     * @param {Object} query
+     * @param {Object} projection
+     */
     static getOne(query, projection = {}){
         return this.findOne(query, projection)
     }
 
+
+    /**
+     * @param {Object} query
+     * @param {Object} projection
+     */
     static getOneOrMany(query, projection = {}){
         return new Promise((resolve, reject)=>{
             this.get(query, projection)
@@ -18,6 +31,10 @@ module.exports = class Wrapper{
         })
     }
 
+    /**
+     * @param {Object} query
+     * @param {Object} projection
+     */
     static getOrFail(query, projection = {}){
         return new Promise((resolve, reject)=>{
             this.get(query, projection)
@@ -26,6 +43,10 @@ module.exports = class Wrapper{
         })
     }
 
+    /**
+     * @param {Object} query
+     * @param {Object} projection
+     */
     static getOneOrFail(query, projection = {}){
         return new Promise((resolve, reject)=>{
             this.getOne(query, projection)
@@ -34,6 +55,14 @@ module.exports = class Wrapper{
         })
     }
 
+
+    /**
+     * 
+     * @param {Object} query
+     * @param {Object} editQuery
+     * @param {Object} body 
+     * @param {Object} projection 
+     */
     static getOneAndEdit(query, editQuery, body, projection = {}){
         return new Promise((resolve, reject)=> {
                     this.edit(editQuery,body)
@@ -43,6 +72,14 @@ module.exports = class Wrapper{
         })            
     }
 
+
+    /**
+     * 
+     * @param {Object} query 
+     * @param {Object} editQuery 
+     * @param {Object} body 
+     * @param {Object} projection 
+     */
     static getManyAndEdit(query, editQuery, body, projection = {}){
         return new Promise((resolve, reject)=> {
             this.editMany(editQuery,body)
@@ -52,6 +89,13 @@ module.exports = class Wrapper{
         })
     }
 
+    /**
+     * @param {Object} query
+     * @param {Object} editQuery
+     * @param {Object} body
+     * @param {Object} projection
+     */
+    
     static getOneAndUpdate(query, editQuery, body, projection = {}){
         return new Promise((resolve, reject)=> {
                     this.update(editQuery,body)
@@ -61,6 +105,13 @@ module.exports = class Wrapper{
         })            
     }
 
+
+    /**
+     * @param {Object} query
+     * @param {Object} editQuery
+     * @param {Object} body
+     * @param {Object} projection
+     */
     static getManyAndUpdate(query, editQuery, body, projection = {}){
         return new Promise((resolve, reject)=> {
             this.updateMany(editQuery,body)
@@ -72,7 +123,11 @@ module.exports = class Wrapper{
 
 
 
-
+    /**
+     * @param {Object} query
+     * @param {Object} body
+     * @param {Object} projection
+     */
     static getOrCreate(query, body, projection={}){
         return new Promise((resolve, rejecet)=> {
             this.getOrFail(query, projection)
@@ -82,10 +137,31 @@ module.exports = class Wrapper{
         })
     }
 
+    /**
+     * @param {Object} body
+     * @param {Object} projection
+     */
+    static createThenGet(body, projection={}){
+        return new Promise((resolve, reject)=>{
+                this.create(body)
+                .then(model => this.getOne({_id : model._id}), reject)
+                .then(resolve, reject)
+                .catch(reject)
+        })
+    }
+
+    /**
+     * @param {Object} query
+     * @param {Object} body
+     */
     static edit(query, body){
         return this.findOneAndUpdate(query, body, {new : true})
     }
 
+    /**
+     * @param {Object} query
+     * @param {Object} body
+     */
     static editOrFail(query, body){
         return new Promise((resolve, reject)=>{
             this.edit(query, body)
@@ -94,6 +170,10 @@ module.exports = class Wrapper{
         })
     }
 
+    /**
+     * @param {Object} query
+     * @param {Object} body
+     */
     static editMany(query, body){
         return new Promise((resolve, reject)=> {
             this.updateMany(query, body)
@@ -103,6 +183,24 @@ module.exports = class Wrapper{
         })
     }
 
+
+    /**
+     * @param {Object} query
+     * @param {Object} body
+     */
+    static editOne(query, body){
+        return new Promise((resolve, reject)=> {
+            this.update(query, body)
+            .then(() => this.getOne(query), reject)
+            .then(resolve, reject)
+            .catch(reject)
+        })
+    }
+
+    /**
+     * @param {Object} query
+     * @param {Object} body
+     */
     static editManyOrFail(query, body){
         return new Promise((resolve, reject)=> {
             this.editMany(query, body)
@@ -111,14 +209,18 @@ module.exports = class Wrapper{
         })
     }
 
-    static updateMany(query, body){
-        return this.update(query, body, {multi: true})
-    }
 
+    /**
+     * @param {Object} query
+     * @param {Object} body
+     */
     static delete(query){
         return this.findOneAndRemove(query)
     }
 
+    /**
+     * @param {Object} query
+     */
     static deleteOrFail(query){
         return new Promise((resolve, reject)=> {
             this.delete(query)
@@ -127,10 +229,9 @@ module.exports = class Wrapper{
         })
     }
 
-    static deleteMany(query){
-        return this.remove(query)
-    }
-
+    /**
+     * @param {Object} query
+     */
     static deleteManyOrFail(query){
         return new Promise((resolve, reject)=> {
             this.deleteMany(query)
