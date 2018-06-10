@@ -22,13 +22,6 @@
     "url": "https://github.com/phacce/moloquent/issues"
   },
   "homepage": "https://github.com/phacce/moloquent#readme",
-  "dependencies": {
-    "mongoose": "^5.1.1"
-  },
-  "devDependencies": {
-    "body-parser": "^1.18.3",
-    "chai": "^4.1.2",
-    "express": "^4.16.3",
-    "sinon": "^5.0.7"
-  }
+  "dependencies": {},
+  "devDependencies": {}
 }
