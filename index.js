@@ -1,5 +1,5 @@
 
 
 module.exports = {
-    Model : require('./Packages/Model')
+    Model : require('./package/Model')
 }
