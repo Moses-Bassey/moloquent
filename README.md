@@ -1,229 +1,98 @@
-# moloquent
-A wrapper for mongoose, emulating the eloquent query Builder for PHP
 
-## TODO
- 
-Lets we are customizing API response to user requesting it and this user for the sake of brevity is identified from the `x-request-user` header. In express we can get the user thus
 
+# Moloquent
+
+Inspired by laravel's eloquent.
+
+To use, add it to your model class
 ```js
-    req.header['x-request-user']
+const {Model} = require('moloquent');
+thatModelSchema.loadClass(class thatModelClass extends Model{
+
+})
 ```
 
+This package is useful for projects where you have a complex query for getting a model by default instead of the traditional `find` or `findOne` query.
 
-Our Target is to transform Post Objects into
+It assumes you will use the `get` and `getOne` methods to wrap your custom query. This could be an `aggregate`, `mapReduce` or maybe `find` or `findOne` with lots of projection and other set up. This way you only get to write them once and resuse them for operations like updates (instead of using `findOneAndUpdate`) and create.
+
+
+A common example is a model that includes rating. Normally you dont show it as is; you have to aggregate to show the average rating. Then your get query becomes..
 
 ```js
-{
-    user : {
-        fullname,
-        email,
-        ...
-    },
-    post : lorem ...,
-    time : Date //timeStamp When ItWas Posted,
-    rating : Number //average Rating
-    rated : Boolean //true if 'x-request-user' has rated it,
-    likes : totalNumberOfLikes,
-    liked : Boolean //true if 'x-request-user' has liked it,
-    comments : {
-        user : {fullname, email, ...},
-        comment : 'Lorem...'
-        time : Date //timeStamp When Comment WasSent
-    } //last 5 comments
-    numComments : totalNumberOfComments 
-}
-```
+    const {Model} = require('moloquent');
+    //mongoose schema and all the other setups
+    thatModel.loadClass(class thatModelClass extends Model{
+        static get(){
+            return this.aggregate([
+                //calculate avergage rating, paginate the actual rating array
+            ])
+        }
 
-For our Test Model (model.js)
-```js
-    const { Model } = require('moloquent');
-    const mongoose = require('mongoose');
-    const {Schema} = mongoose;    
-
-    const postSchema = new Schema({
-        user : {type: Schema.Types.ObjectId, required: true, ref: 'User'},
-        post : {type: String, required: true},
-        time : {type: Date, 'default': Date.now},
-        ratings : [{
-            rating : {type: Number, min: 1, max: 5, required: true},
-            user : {type: Schema.Types.ObjectId, required: true, ref: 'User'}
-        }],
-        likes : [{
-            user : {type: Schema.Types.ObjectId, required: true, ref: 'User'}
-        }],
-        comments : [{
-            user : {type: Schema.Types.ObjectId, required: true, ref: 'User'},
-            comment : {type: String, required: true},
-            time : {type: Date, 'default': Date.now}
-        }]
-    })
-
-    class Posts extends Model{
+        static getMany(){
+            return this.aggregate([
+                //paginate results, calculate average rating, paginate actula rating array
+            ])
+        }
         
-    }
-
-    postSchema.loadClass(Posts)
-    //export model with a connection
-```
-
-Our express Route File
-
-```js
-const  router = require('express').Router();
-const Controller = require('../Controllers/Posts');
-const id = "\\w{24}";
-
-router.get(`/:post(${id})?`, Controller.get);
-
-router.post(`/`, Controller.create);
-
-router.put(`/:post`, Controller.update)
-
-router.delete(`/:post`, Controller.delete);
-
-router.post(`/:post(${id})/comment`, Controller.comment)
-
-router.put(`/:post(${id})/comment/:comment(${id})`, Controller.editComment)
-
-router.delete(`/:post(${id})/comment`, Controller.deleteComment)
-
-router.get(`/:post(${id})/like/:user(${id})`, Controller.like)
-
-router.get(`/:post(${id})/unlike/:user(${id})`, Controller.unlike)
-
-router.post(`/:post(${id})/rating`, Controller.rate)
-
-module.exports = router;
-```
-
-The Controller (Controller.js)
-
-```js
-const Post = require('../models/Posts');
-const {ObjectId} = require('mongoose').Types
-
-module.exports = class PostsController{
-    static get(req, res){
-        Post.getOneOrMany(req.params.post && {_id : req.params.post})
-        .then(post => res.json(post))
-        .catch(err => res.json(err.toString()))
-    }
-
-    static create(req, res){
-        Post.createThenGet(req.body)
-        .then(post => res.json(post))
-        .catch(err => res.json(err.toString()))
-    }
-
-    static delete(req, res){
-        Post.delete({_id : req.params.post})
-        .then(post => res.json(post))
-        .catch(err => res.json(err.toString()))
-    }
-
-    static update(req, res){
-        Post.edit({_id : req.params.post},req.body)
-        .then(post => res.json(post))
-        .catch(err => res.json(err.toString()))
-    }
-
-    static like(req, res){
-        Post.getOneAndEdit({_id : ObjectId(req.params.post)},{_id : ObjectId(req.params.post),'likes.user' : {$ne : ObjectId(req.params.user)} },{$addToSet : {likes : {user : req.params.user} } } )
-        .then(post => res.json(post))
-        .catch(err => res.json(err.toString()))
-    }
-
-    static unlike(req, res){
-        Post.editOne({_id : ObjectId(req.params.post)}, {$pull : {likes : {user : req.params.user} } })
-        .then(post => res.json(post))
-        .catch(err => res.json(err.toString()))
-    }
-
-    static comment(req, res){
-        Post.editOne({_id : ObjectId(req.params.post)},{$push : {comments : req.body} } )
-        .then(post => res.json(post))
-        .catch(err => res.json(err.toString()))
-    }
-
-    static deleteComment(req, res){
-        Post.editOne({_id : ObjectId(req.params.post), 'comments._id' : req.params.comment},{$pull : {comments : {_id : req.params.comment}} } )
-        .then(post => res.json(post))
-        .catch(err => res.json(err.toString()))
-    }
-
-
-    static editComment(req, res){
-        Post.editOne({_id : ObjectId(req.params.post), 'comments._id' : req.params.comment},{$set : {'comments.$' : req.body} } )
-        .then(post => res.json(post))
-        .catch(err => res.json(err.toString()))
-    }
-
-    static rate(req, res){
-        Post.getOneAndEdit({_id : ObjectId(req.params.post)}, {_id : ObjectId(req.params.post),'ratings.user' : {$ne : ObjectId(req.body.user)} }, {$push : {ratings : req.body}})
-        .then(post => res.json(post))
-        .catch(err => res.json(err.toString()))
-    }
-}
-
+        //other custom model methods
+    })
 ```
 
 
- Test all Wrapper methods
+## Methods
 
-- [ ] get(augumented find)                           
-    This is your custom query instead of using the traditional find or findOne. It could be aggregation or mapReduce, or normal find with other manipulations, projection and population. By default, it uses ```js Model.find(query, projection={})```
 
+- `get`
+    Defaults to `find`. This can be overrriden to become your custom method of showing your model to the user. It returns an array of mathces or an empy array if none was matched.
+
+- `getOne`
+    Defaults to `findOne`. This also can be overridden like the `get` method to customize the way you show your model.
+
+- `getOneOrMany`
+    Based on your `get` methods, if the result holds a single match, it returns the single match, else it returns the array as is.
+
+-  `getOrFail`
+    returns a rejected promise if result from the `get` method is an empty array. Usefull for verification and Authentication.
+    
+
+-  `getOneOrFail`        
+    returns a rejected promise if result from `getOne` method is null.
+
+-  `getOrCreate`
+    It creates a record if it fails to find a match, based on your `get` query. The result is returned using your `getOne` method.
+    It is useful if you dont want to the modification effect of upserts but want to always get a result as you would with upserts.
+
+-   `createThenGet`
+    Used for making newly created result consistent with the ones gotten from `getOne`. 
+
+
+-   `getOneAndEdit`
+    Since (at the time of writing), there was no provision for conditional `update`, this allows you set different query for `getOne` and `update`. I use it alot in array of subdocuments which are suppose to be unique, example rating. Since there is no way to check if the record exists during `update` operations and you want to return the result as you would with `getOne`, you use the method.
     ```js
-        static get(query, projection){
-            return this.aggregate([
-                
-            ])
+        thatModel.getOneThenEdit(getQuery, editQuery, body){
+            //perform update operation
+            //the return getOne
         }
     ```
 
-- [ ] getOne
-    returns a single match for a query or null, this is based on your custome getOne static method, by default it is ```js Model.findOne(query, projection={})```
-    
-    ```js
-        static getOne(query, projection){
-            return this.aggregate([
+-   `getManyAndEdit`
+    same with `getOneAndEdit` but deals with `updateMany` and many results. returns the result using `get`;
 
-            ])
-        }
-    ```
-- [ ] getOneOrMany                 
-    returns an array if query result returns more than one record, returns first result if query returns just a single query              it is based off your ```js Model.get(query, projection)```
+-  `edit`
+    performs an `update`, then returns the result using `getOne`. Alternatively you can use the `findOneAndUpdate` but this one maintains the result you would achieve with your `getOne` method.
 
-- [ ] getOrFail
-    returns a Many matches for a query or fail(rejected Promise) if null
-    
+-   `editMany`                                 
+    performs an `updateMany`, the returns the result using `get`.
 
+-   `editOrFail`
+    performs an `edit`, then returns a rejected promise if no match was found. The use case for this is rare, I think.
 
-- [ ] getOneOrFail        
-    return a match for a query or fail(rejected Promise) if null
+-   `editManyOrFail`
+    performs an `editMany`, then returns a rejected promise no match was found.
 
-- [ ] getOneAndEdit                                  
-    updates a query and return the match of the query based on your custom get query
+-   `deleteOrFail`
+    Tries to delete a record, returns a rejected promise if it no match was found
 
-- [ ] getManyAndEdit                                 
-    updates many records and return the matches of the query based on your custom get query
-
-- [ ] getOrCreate                                    
-    tries to fetch a result, else create it, usefull when u dont want the modification effect of using an upsert operation
-
-- [ ] edit                                           
-    wrapper for findOneAndEdit, but sets the ```js {new : true}``` option
-
-- [ ] editOrFail                                     
-    edit a document, fails if no match or error
-
-- [ ] editMany                                 
-    edits many document
-
-
-- [ ] editManyOrFail                                 
-- [ ] updateMany                                        
-- [ ] delete                                         
-- [ ] deleteMany                                     
-- [ ] deleteOrFail                                   
-- [ ] deleteManyOrFail                               
+-   `deleteManyorFail`
+    Tries to delete many records, returns a failed promise if no match was found
