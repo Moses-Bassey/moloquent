@@ -95,7 +95,7 @@ module.exports = class Model{
      * @param {Object} projection
      */
     static getOrCreate(query, body, projection={}){
-        return new Promise((resolve, rejecet)=> {
+        return new Promise((resolve, reject)=> {
             this.getOrFail(query, projection)
                 .then(resolve, () => this.create(body))
                 .then(resolve, reject)
